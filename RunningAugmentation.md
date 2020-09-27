@@ -1,27 +1,12 @@
-## Expose variable names as defined in scripts (in console)
-Explicit notations on script startup … in-browser console ; server console
 
-```js onion [tags, listed]
+# V32SVGn × jsonion
+… special attention afforded to a good read; the roll-out script.
 
-import lib, { TrieType } from jsonion
+Aligning SVG with modern reactive data sources -- standarized to plug-and-play. Replacing .jsx polyfills with good vibes.
 
-var etc = new TrieType({
+## Resolving unique paths among a variety of data types
+   ie. ".status_updates # ({measureOfUniqueness}) => fbPosts"
 
-	sun { flower { oil 		: { 0: $ }}},
-	flax { seed { s 		: { 0: $ }}},
-	olive { oil 			: { 0: $ }},
-	linseed					: { 0: $ },
-	lentils					: { 0: $ },
-	buckwheat { flour		: { 0: $ },
-	wheatflour				: { 0: $ },
-	chickpeas				: { 0: $ },
-
-
-}, lib.flags.i)
-
-lib.toConsole(...etc)
-
-```
 
 --- ---———
 
@@ -38,108 +23,269 @@ lib.toConsole(...etc)
 */ jsonion_db = {  // … into the cross-origins
  //
 
-  _: {  /*   Operations RAM   */ },
+  _: {  /*   Operations RAM   */  },
   i: { /* Index of key paths */ 0: {}, 1: {} },
-  ctx: {}, ctxProxy: {}, db: {}, dbProxy: {},
+  ctx: {}, ctxProxy: {}, dbProxy: {},
 
-  init(hydrate){
-    hydrate.forEach( (mapKey, object) => {} )
+  hydrate(jsonion_db){
+    jsonion_db.forEach( (key, object) => {} )
+  },
+  escapeKeys(__reserved){ // …
+    (typeof __reserved === 'object')
+   ? true // trie( __reserved )
+   : reservedNames.forEach( (val) => {} )
   }
+  // … Setter methods
 },
+
 
 /* ´´´  "Augmented Data, GraphQL & React/Redux"
 ´´´ */ 
-    route = (objTrie, action, params, resolver) 
-  => { return resolver( action, params, obTrie )
-},
+    route = (objTrie, action, params, resolver)
+  => { return resolver(action, params, objTrie)
+};
+
+
+jsonion_db.init({
+  ctx: { localStorage: 1,
+   "svg#snow-menu": {"{keyPath}": "{N}"},
+   "svg#bevelDoor": {"{keyPath}": "{N}"},
+   "html#instagram.com/leapgesture": {
+     "{keyPath}": "{countOf.documents}"
+    }
+  },
+  ctxProxy: {
+    cache:  { "{keyPath}": {RabbitMQ: "{N}"} },
+    stores: { 
+     "{keyPath}": {
+       "./public/snow-menu.svg": "{N}" },
+    },
+    components: { 
+     "./snow-menu.svg": ["{keyPath}"],
+     "./metacurrency.svgn": ["{keyPath}"],
+     "./instagram.jsonion": ["{keyPath}"]
+    } 
+  },
+  dbProxy:{ 
+    sqlite: {"{keyPath}": "{N}"},
+  },
+  _:{
+    typeTrie: {__reserved:{}},
+    proxyResolver:{
+     "this.tab": "{n}",
+      ctx:{       
+        localStorage:"jsonion.proxy"
+       // … one URL/file open twice
+      },
+      cache:{
+        NodeJS:"localhost:3000/jsonion/{keyPath}"
+      },
+      stores:{
+       '{URL}.svg':{
+          BrowserAddon:"tabs.{n}"
+        },
+        NodeJS:"localhost:3000/jsonion/{keyPath}"
+      },
+      components:{
+        BrowserExtension:"tabs.{n}"
+      },
+      dbProxy:{
+        NodeJS:"localhost:3000/jsonion/{keyPath}"
+      },
+    }
+  }
+});
+
+
+/* {routeTrie: {__reserved:{}}; var { Integer, String, Number, Float, Array, Object, Timestamp, HashId, Name, Names, Email, PostAddress, PhoneNumber, oneOf, tryOne, optional, caseInsensitive, partialMatch } = jsonion_db._.typeTrie = jsonion.escapeKeys( String, Number, Float, Array, Object, optional ) */
+
 
 ```
 
 ```js types.agents.js
 
 export const agentTypes = {
- user: {}
- entity: {}
+  user: {},
+  entity: {}
 }
 
 ```
 
 ```js db.users.js
+
 /*
 
  # Package: 'jsonion-users'
  - Augments any database of users, thus keeping track of user records across multiple services
- - Pseudonyms in users' credentials are expected to mask real identity; thus decryption key subparts are shared as a secret knot (= DB rel.) tying in public accounts (to reveal with certainty at a later point in own name & by assembling private key from multiple parties)
+ - Pseudonyms in users' credentials are expected to mask real identity; thus decryption key subparts are shared with peers as a secret knot (= DB rel.) tying in public accounts (to reveal with certainty at a later point in own name & by assembling the dispersed, unlocking private key)
 
  */
 
+import { Index, Relation AS Rel, Unique } from './types.db'
+
 import { 
-  Integer, String, HashId, Timestamp,
-  Names, Email, PostAddress
+  Integer, String, Object, Timestamp, HashId,
+  Name, Names, Email, PostAddress, PhoneNumber,
+  optional
 } from './Types/'
 
-import { index, relation AS rel } from './Types/db'
-import { eventSource } from './db.eventsource'
-import { language } from './db.languages'
-import { Actions } from './actions'
+import { schemaMixin } from './render.schema'
 
-export const user = { users: index.collection`
 
-#{{id}} #{{userId}} #{{firstName}} #{{surname}} ##{{pseudonym}} ##{{email}}
+const userSchema = { __key: "Users #", ...[Index`
 
-`, // … Index of users' data will contain first-tier and second-tier values only upon a query is delivered.
+#{id} #{userId} #{firstName} #{surname} ##{pseudonym} ##{email}
+
+`], // … Index of users' data will contain first-tier and second-tier values only upon a query is delivered.
 
  
 __oneOf: [
-  id: { type: Integer, ...unique },
-  userId: { type: HashId, ...unique },
+  id: { type: Integer, ...Unique },
+  userId: { type: HashId, ...Unique },
 ],
 
- pseudonym: { type: String, synonym: ['username', 'account handle'] },
+  ...[ schemaMixin.mapActions( Timestamp, 'create', 'update', 'close', 'remove' ) ],
 
-__contacts: { _: {
-  firstName: [Names, 2],
-  surname: [Names],
-  email: [Email],
-  address: [PostAddress]
- }, synonyms: ['contact details', 'personal info', 'whereabouts'] 
+  pseudonym: { type: String, synonym: ['username', 'account handle'] },
+
+__accounts: { _: { // …
+  //  //  //  //  //
+} },
+
+__contacts: { _: { // …
+       emails: { flags: optional, type: [Email] },
+    firstName: [ optional, Name, 2 ],
+     fullName: [ optional, Names   ],
+      surname: [ optional, Names   ],
+       cities: [ optional, [Names] ],
+  homeAddress: [ optional, PostAddress ],
+ phoneNumbers: { type: Object, 
+     '{type}': [ PhoneNumber ], flags: optional },
+  },
+  __synonyms:  ['contact details', 'personal info', 'whereabouts'] 
 },
 
- languages: { _: language, ...rel.id },
- 
- // … should create an Iterator
- ...[Actions({ autoValue: "{{ TIMESTAMP_NOW }}" }, 'create', 'edit', 'close', 'remove', [Timestamp])],
- ...[Actions('delete', { callback: eventSource })]
+// languages: { _: language, ...rel.id },
+
+  ...[ schemaMixin.mapActions( Stateless, 'delete') ]
+
 }
 
 ```
 
-```js db.circle.js
-
-import jsonion from './...' // … 
-
-// Circles -- groups of people with common interest
-
-jsonion.circle = {
-
-// List of users and circles
-   member: ["user", "commoner"], 
-   languages: {}
-// … which members of a group use to communicate with -- with insights mapped, possibly to a GraphQL/React templates (from aggregate metrics and statistical indexes and derived coefficients)
-
-}
+```js db.circle.js [!!!]
 
 //
-/* Entity -- a circle of people who delegate agency
- … to actors on a role to enact common visions, with peers
+// ## Circles
+//  … groups of people with common interest
+//
+/* car userMembership = Circle.members.getById({
+   circleId: null, userId: null
+}) */
+
+var Circle = jsonion.stem( 'circles #', {
+__alias:['circle','group++s'],__abbr:["crcl"],
+
+__id: { circleId: [oneOf, Integer, String] },
+
+__actions: [
+    { key: [oneOf, '{action}', '{Action}'],
+      val: [oneOf, Boolean, Integer, String] }
+  ],
+
+
+ // List of members
+  members: { _: {
+    __id: { userId: [oneOf, Integer, String] },
+
+    __actionPrivileges: [
+    { key: [oneOf, '{action}', '{Action}', '{privilege}_{action}', '{privilege}{Action}'],
+      val: [oneOf, Boolean, Integer, String] }
+  }, 
+  __aliasKey:["member"], __synonym:["commoner","user"] },
+
+
+ // List of languages in use
+  languages: { _: [
+   { 
+        
+   },
+  ],
+  __aliasKey:["language"], __synonym:["lingua"] }
+  // … which members of a group use to communicate with -- with insights mapped to metrics, possibly to a GraphQL/React templates (from aggregates, statistical indexes and derived coefficients)
+
+});
+
+
+Circle.actionList = [
+ "join", "invite", "decline",
+ "publish", "comment"
+];
+
+
+Circle.augment( 
+
+  d_b.link({
+   "circles":{
+      cache:{
+       '{source}':{
+         remap: { }},
+      }
+    }
+  }), 
+
+  d_b.regActions({
+  __actionTpl: null,
+      j: ()=>{},
+    dec: ()=>{},
+      i: ()=>{},
+      p: {$: { encircle: ()=>{} }},
+      c: ()=>{},
+   refl: ()=>{}
+  })
+);
+
+
+
+/*  //  //
+
+##  Entity
+ …  a limited group of people who delegate agency to enact common vision in its own name, to actors on a role
+
 */
 
-jsonion.entity = {
-  // Raising awareness of own conduct ... undefined
-}
+
+var Entity = jsonion.augment( 
+  'circles -> entities', 
+ /* ~= Circle.augment */
+{
+  __alias: ['entity'],
+
+ // Raising awareness of own conduct ... undefined
+});
+
+
+Entity.augment( 
+  d_b.link({
+   "entities":{
+      cache:{
+       '{source}':{
+         remap: { }},
+      }
+    }
+  }),
+  d_b.regActions({
+     "reflect": ()=>{},
+       "value": ()=>{},
+        "vote": ()=>{},
+      "curate": ()=>{},
+   "represent": ()=>{},
+      "manage": ()=>{}
+  })
+);
+
 
 ```
-
 ```js actionPreset.js
 //  //  //  //  /*
 
@@ -154,12 +300,20 @@ jsonion.entity = {
 
  ##  Map actions to data schema
 
-/\/ export default preset; */
-    var { caseInsensitive, partialMatch, optional } = std
+/\/  export default preset; */
+     var { caseInsensitive, partialMatch } = std
 
 //  //  //  //  //  //  //  //
 
-var preset = (source = {app:{}, pckg:{}, api:{}, offline:{}}, tpl = {   
+var preset = ( source = {
+  app:{}, pckg:{}, api:{}, offline:{}
+}, // /\
+  /*..*/  dictionaryTrie = actions__en, tpl = null
+)   =>   {
+
+
+  if( !tpl )
+ (tpl = {
 
   '{0}': [ 'collection', 'object', 'table', caseInsensitive ],
 '{key}': { '{0}':{'Name': $}, partialMatch.left },
@@ -171,8 +325,8 @@ var preset = (source = {app:{}, pckg:{}, api:{}, offline:{}}, tpl = {
   ],
   id: [ 'id', 'Id', jsonion`{key}Id`,
     sql`{key}_id`, jsonion`{key} # .[Ii]d`,
-    jsonion`{key}.[Ii]d`, '...relation' ]
-  relation: { __match:{__index:{ __gte: 1 }}},
+    jsonion`{key}.[Ii]d`, '...relation' ],
+  relation: [__match:[__index, {__gte: 1}]],
   user:[ 
     json`{enacted}By`, sql`{enacted}_by` 
   ],
@@ -189,24 +343,23 @@ var preset = (source = {app:{}, pckg:{}, api:{}, offline:{}}, tpl = {
     sql`{action}_at`, sql`{enacted}_at` ],
 __try: { timestamp: [ '/.*[Dd]ate.*/', /.*[Tt]ime.*/ ] },
 __call: [ redux.allCaps`{action}_{tablePath}` ],
-     // {type}: [ custom definitions ] … #{shortKey} sort, filter 
+     // {type}: [ custom definitions ] … #{shortKey} sort, filter
+ }),
 
-}, // /\
-  /*..*/    dictionaryTrie = actions__en    //
-)   =>   {
- 
-  var actionList = {
+
+  actionList = {
     template: tpl,
     language: dictionary.languageCode['ISO 639-1'],
     dictionary: dictionaryTrie, // Unload memory while parsing ...
     ...source
   }
 
+
   //
  //  Compile and merge with "jsonion" database process
 // ( a prepocessing method, reusable at runtime )
 
-  var merge = function (
+  merge = function (
 
 //  Main input: calculate "difference" and "merge"
       actionSource, dictionaryTrie, tpl,
@@ -272,155 +425,199 @@ __call: [ redux.allCaps`{action}_{tablePath}` ],
 
 */
 
-import { Text, Integer } from './Types/'
-import { 
-  validationSchema, withHolochain, withEthereum 
-} from './db.valida.js'
-import { Actions } from './actions'	// … mirroring a part of data node -- 'eventsWithState' (to generate fields) || 'events'
+import { String, Array, optional } from './Types/'
+import { schemaMixin } from './render.schema'
 
-/* 
 
-   A list of actions that write and modify state of data (node's context)... Rules of access to data are defined in scope of application? 
+jsonion.stem.prototype.__validationKeys = [
+ [".valid", ".valida", ".validation"],
+ [".cksum", ".chksum", ".checksum", ".checksums"],
+ [".hashchain", ".hashChain"],
+ [".proofOf", [".proofOfWork", ".proofOfStake"]],
+ [".blockchain", [".mirror", ".mirrors"], ".dht"],
+ [".signatures", ".cosigned", ".cosigning", ".undersigned", ".undersigning"],
+  ".reactions"
+]; // … immediately resolving data types listed ahead
 
-*/
-// To-do: Translate schema into JSON schema type (March - May, 2017)
+jsonion.stem.prototype.__embedKeys = [
+  "._{relation}",
+ [".stems", ".stem"],
+ [".augm", ".augmentations"],
+ [".ext", ".extensions"],
+ [[".actn", ".actions"], [".timestamps", ".t", ".tn"]]
+ [".aggregations", [".stat", ".stats", ".statistic", ".statistics"]],
+ [".tags", [".hashtags", ".\#"]]
+];
 
-var nodeStem = {
+jsonion.stem.prototype.__annotationKeys = {
+  ".annotations",
+ [".ref", ".refs", ".references"],
+ [".includes", ".included", ".includesData"], 
+  ".contains"
+};
 
- id: { type: String, unique: true }, // Data node ID; Unique for each data node?
+jsonion.stem.prototype.subset = [
+ [".captions", ".views", ".partials", ".partialViews"],
+ [".rootData", ".rootDataNodes"],
+ [".rel", ".related", ".relatedData", ".relatedDataNodes"]
+];
 
- ...augment('sql', 'json').({
-  key: "no
- }),
 
- // Current branch (multiple content versions and translations may be contained)
- branch_id: Integer,
- branch_timestamp: Integer,
+jsonion.stem.prototype.__schema = () => {
 
- // Current published state
- state_id: Integer,  
- state_timestamp: Integer,
+  var { mapActions, mapObjects, head, main, foot } = schemaMixin,
 
- ...actions('create', 'update', 'publish'),
- ...actions('close', 'remove'),
- ...actions('unpublish', 'delete'),
+  sourceServiceParams = this.arguments[0],
+  embedKeys = (this.arguments[1])
+             ? this.arguments[1] : null;
 
- ...validators().on(Holochain, Twitter)
+  return (
+ {
 
-}
+  stemId: { type: String, unique: true }, 
+ // [BranchTag] × [StateActual] × [ChainHash]
 
-/* 	
-	Type 'rhizome': data node's state of mapped relations within plurality of co-evolving contents
-*/
+ // Determined main branch stemId (hash)
+  main: [String, optional],
+
+
+  ...[ mapObjects('{ internalPath }') ],
+  ...[ mapObjects( sourceServiceParams ) ],
+
+
+  language: [ String, {__type:[__oneOf, __caseInsensitive, "lang", "langISO", "langId", "langCode", "language", "languageISO", "languageId", "language_code", "languageCode", "ISO-639-1"]} ],
+
+ // Branch identifiers (alphabetically ordered list)
+  branch: [
+    optional, [String]
+  ],
+
+  ...[ mapActions('create') ],
+
+  ...[ head ],
+  ...[ main ],
+  ...[ foot ],
+
+ // A published state (multiple content versions and translations may be stored in a document's state, or with related data nodes)
+
+  ...[ mapObjects( embedKeys )],
+  ...[ mapObjects( annotationKeys )],
+  ...[ mapObjects( validationKeys )],
+
+  ...[ mapActions.stateless('modify', 'delete') ]
+ })
+
+});
+
+
 /*
-import {rhizome_related_node, rhizome_by_type,
-		contained_relation_types, agent_relation_types, external_relation_types,
-		translate_request} from 'schema';
-*/
-// Type 'multilingual': enables storing content in multiple languages, by adding translations to rhizome
 
-// import {state, state_translate_request} from 'schema';
-// import {draft, draft_translate_request} from 'schema';
+##  Augmentation type: 'rhizome' 
+ …  is a catch-all category for indirectly and potentially related contents... co-evolving, concurrent, ambiguous and weakly correlated; in scrambled codification
+
+*/
+//  import { rhizome_related_node, rhizome_by_type, contained_relation_types, agent_relation_types, external_relation_types } from 'schema';
+
+//  Storing content in multiple languages with translation mixins
+//  import { state, draft, translate_request } from 'schema'
 
 ```
 
 ```js db.review.js
+//
+//  Type 'reflections': enables commenting contents, giving ability to attach reflected realities during evolving
+const reflection = {
 
-// Type 'reflections': enables commenting contents, giving ability to attach reflected realities during evolving
+ // __eventStateful: actions('create', 'remove', 'mutate'),
+//  __eventStateless: actions('delete')
 
-const reflection = { // Modelling augmentation in early 2017
+}; // … with highlights in reference
 
-	sql: { 
-		node_id: String,
-		branch_id: Integer
-	},
-	
-	state_id: Integer,
-	
-	eventsWithFields: [actions.platform.create, actions.platform.remove, actions.platform.mutate],
+//
+//  Type 'highlight': in-text markups and referenced contents (attachments)
+const highlight = {
 
-	events: [actions.platform.delete]
+  //  pointer_field: String,
+  //  pointer_fulltext: Integer,
+
+  //  eventsWithState: ['create', 'remove'],
+  //  events: ['delete']
 };
 
-// Type 'references': enables referencing contents (attachments)
-
-const reference = {
-
-	sql: { 
-		node_id: String,
-		branch_id: Integer
-	},
-	
-	state_id: Integer,
-		  
-	pointer_field: String,
-	pointer_fulltext: Integer,
-
-	eventsWithFields: [actions.platform.create, actions.platform.remove],
-
-	events: [actions.platform.delete]
-};
-
-// Type 'reports': enables reporting inappropriate contents, falsifying invalid data - both in accord with specific circles
-
+//
+//  Type 'reports': enables reporting inappropriate contents, falsifying invalid data - both in accord with specific circles
 const report = {
 
-	eventsWithFields: [actions.platform.create, actions.platform.resolve, actions.platform.close, actions.platform.remove],
-
-	events: [actions.platform.delete]
+  //  eventStateful: ['create', 'remove', 'resolve', 'close'],
+//    eventStateless: ['delete']
 };
 
-// with any augmented collection (why just so)
-// parse pointers to data
-// parse markup syntax
 
+//
+//  with any augmented collection
+//  parse pointers to data, markup syntax, ...
+//
 ```
 
 ```js db.eventsource.js
-
-// Stems: {coll} / eventSource
 //
-// An event occurs one too many times ...
-// 
+//  As standalone data collections
 
-var augment, inputSchema, matchSchema = {}
-
-stem = {
-  name: 'eventSource',
-}
-
-matchSchema.type = {
- __unique: true,
- __oneOf: [
-  'node_id', 'event_id'
+var evSrc = jsonion.collection( "EventSource #",
+ {
+  __abbr: "evSrc", // … to "_.abbr"
+  __embedKeys: jsonion.collections.__embedKeys
+ },
+ [
+  uid`#id`, index`##stemId ##timestamp ##action ##enactedBy ##enactedAs`,
+  stats.count`(.{action}) -> countOf.{action}`
+  checksums.orderKeys`({nodeStem}) -> .checksums`
  ]
-}
+); // … dataset in 'jsonion' (delimited)
 
-var inputSchema = {
 
-__standalone: {
-    _: 'string',
-    match: ['object', 'ASC']
+//
+//  As an augmentation (to embed in collections)
+
+jsonion.augmentation( evSrc,
+  stats.count`( evSrc[ .{stemId}, .{action} ]) -> countOf.{action}`
+);
+
+
+//
+// A 'gestures' collection initialization (json)
+// ( with 'nodeStem' root schema )
+
+var gestureCollection = { "gestures": {
+  __stem:{
+    augmented: ["EventSource", /* stemPath */],
+    embedKeys: [".extensions"],
   },
+  __schema: [null],
+  __abbr: { "gesture": ["gest", "gestr"] },
 
-    collection: 'string',
-    timestamp: [ Integer, 11 ],
-//  augmented: ['string', 'array'],
-    action:    ['string', 'array'],
-    user_id:   [ Integer, 'string' ],
-    entity_id: [ Integer, 'string' ],
+/*
+  Render a database modification?
 
-  __checksum: {
-      md5: {},
-      sha256: {
-       '{{ chainType }}': '{{ hash }}'
-      },
-    },
-  __defaultKeys: ['sha256']
-}
+  ->  SQL create table instructions (auto exec)
+  -> .sql file & a pending notice (rename, delete) 
+ 
+  JSON schema migration (pending)
+*/
+);
 
+
+//
+// 'jsonion._.stem' data tree delimiters
+/*
+var stem = { name: 'EventSource', path: jsonionKey, embedKeys: '.ext', ref: { db: {}, dbProxy: {}, ctx: {}, ctxProxy: {}, embed: { 
+...[StemPath(existingCollectionKey, "eventSource")] } } };
+var augment, inputSchema, matchSchema = {};
+matchSchema.type = { __unique: true, __oneOf: [ 'node_id', 'event_id' ] };
+var inputSchema = { __standalone: { _: 'string', match: ['object', 'ASC'] }, collection: 'string', timestamp: [ Integer, 11 ], augmented: ['string', 'array'], action:    ['string', 'array'], user_id:   [ Integer, 'string' ], entity_id: [ Integer, 'string' ], __checksum: { md5: {}, __sha256: { '{{ chainType }}': '{{ hash }}' } }, __defaultKeys: ['sha256'] }
+ */
 // findNamespace: ''
-
+//
 ```
 
 ```js db.augment.js
@@ -428,7 +625,7 @@ __standalone: {
 /*
 
  # Logic of `jsonion` database schema definitions
- … harvesting the granularity of SQL data relations model (enabling further indexing and refactoring)
+ … harvesting granularity of SQL data relations model (enabling further indexing and refactoring)
 
  */// Should export possible actions, relevant to what and when (in cosequence)
 
@@ -439,31 +636,51 @@ var createCollection // write schema to LocalStorage, .json file (export schema;
 
 var indexRelation // Trie type index, SQL add index key
 
-var find, filter // select
+var find // select
 
 ```
 
-```js schema.primitives.js
+```js schema.primitives.js [!!!]
+//
+/*
 
-Import { String, Array, Text, Integer as Int } from "./stdTypes"
+Import { String, Array, Text, Integer } from "./stdTypes"
 Export { fieldDiff, fieldDiffList, fieldValue }
 
-const fieldDiff = { // Difference since previous state
-  field: String,
-  diff: String, 
-  n: Int // Steps of change, where applicable
-};
+*/
 
-const fieldDiffList = { // List of modifications
-  field: String,
-  diffList: [
-    { diff: String, levensthein: Int }
-  ]
-};
+
+const keyPath = { keyPath: String },
 
 const fieldValue = { // Field and value schema (SQL naming)
   field: String,
-  value: [Int, Float, String, Text]
+  value: [tryOne, Integer, Float, String, Text]
+};
+
+
+//
+// Difference since previous state
+
+const fieldDiff = { // Simple difference
+ ...keyPath,
+    diff: String,
+    diffLen: Integer, // Change in length
+    blocks: Integer, // Number of modified sections
+
+  __index__oneOf: {
+    indexL: Integer,
+    indexR: Integer
+    },
+
+  __stat__oneOf: {
+    n: Integer,
+    levensthein: [Integer, optional] 
+    } // … number of characters modified -- added and removed (when applicable)
+};
+
+const fieldDiffArray = { // List of modifications
+ ...keyPath: String,
+    diff: [ '{diff__String}', '{indexL__Integer}',  '{levensthein__Integer__Optional}' ]
 };
 ```
 
@@ -569,94 +786,103 @@ import { Line as NL, Headline as H, Paragraph as P } from './' // Layout blocks
 
 import { escapeExpression as e } from '../util' // function unexistent here yet [!!!]
 
-/*
-const exampleContent: "
+/* const exampleContent = `
 
-	# Überschrift (aha!)
+ # Überschrift (aha!)
 
-	Here is etwas
+ Here is etwas
 	1. Erste
 	2. Zweite
-	3. …
+ 3. …
 
-"
-*/
+  ` */
 
 
 export default function orderedList (props) {
 
-	//
-	// Content blocks in which this expression can appear
-	//(even when not explicitly declared)
-	//
-	
-	this.compatible = { 
-		in: { // Needless to declare: "Document.*"
-			text2json: ["Section", "Paragraph"],
-			parserName: [""],
-			parserName_2: [""]
-		},
-		contains: {
-			parserName: ["Expressions", "Blocks"]
-		},
-		with: { // Both wrapped "in" or "contains"
-			parserName: ["Expr", "Block"]
-		},
-		not: {
-			parserName: ["Expr", "Block"]
-		}
-	}
-	// … Is extensible (before considering fnIndex__Wikipedia)
-	if(_.isObject(props.in))
-		compatible.in = _.merge(compatible.in, props.in)
+
+  //
+  //   Containing blocks and cosequent expressions
+  // ( explicitly declared, after all )
+  //
+  // … needless to declare: "Document.*"
+  //
+
+  this.cosequent = {
+    in: d_b.matrixArr( [Section, Paragraph], [CommonMark, WikipediaMarkup] )
+  };
+
+  this.contains = [ __expr, __blocks,
+   '{__parser}': ['{__type}, …']
+  ];
+
+ // this.with = [...this.cosequent, this.contains]
+
+  this.symbols = {}
+
+  if(_.isObject(props.in))
+    this.cosequent.in = _.merge(this.cosequent.in, props.in)
+
+    this.NumberedItem = {
+      expr: "numberedItem",
+      compatible: {
+        in: { ...compatible },
+        contains: { ...compatible },
+        ruleOut: { ...compatible }
+      },
+      symbols: {
+        opening: {
+          "/[0-9]+\.\s/": ["md", "text2json"],
+         "/[0-9]+\s{0,1}\)\s+/": ["text2json"],
+       "/[0-9]+\s+/": ["text2json"]
+      }
+    },
+    match: true
+  }
 
 
-	this.symbols = {}
+  this.match = (input, el, db) => {
+
+/* 
+
+  Does a previous list item somehow share the same block?
+		
+  Conditions to be met (descending by priority — higher priority first):
+ —  at least two cosequent items with an ascending order of numbers exist at same indentation
+ —  no elements with a shorter distance from data tree root are found in between two items
+  ( ie.: left in tree ~ with a smaller indentation )
+
+*/
 
 
-	this.NumberedItem = {
-		expr: "numberedItem",
-		compatible: {
-			in: { ...compatible },
-			contains: { ...compatible },
-			ruleOut: { ...compatible }
-		},
-		symbols: {
-			opening: {
-				"[0-9]+\.\s": ["md", "text2json"],
-				"[0-9]+\s{0,1}\)\s+": ["text2json"],
-				"[0-9]+\s+": ["text2json"]
-			}
-		},
-		match: (input, el, db) => {
+// 1) Run a query (when an expression didn't issue tokens on its own)
+
+    var previousListItem = db.get('tokens')
+     .queryTx({	// … 
+        expr: el.expr,
+        parser: null,
+        with: this.cosequent,
+
+     // When retrieving token data ...
+        ref: 1234,		// … shares one of the same containers
+        tree: 12, // … is on level with a relevant token
+        walk: 3,		// … will traverse tree of tokens N steps
+
+     // Sorting results
+        sort: "desc",
+        limit: 1,
+     // recent: 1 // shorthand for the above two parameters
+				}).value()
+
+/*
 
 
-			// Does the previous list item somehow share the same block?
-			//
-			// Conditions must be met (descending by priority — higher priority first):
-			// — at least two items with an ascending order of numbers exist at same indentation
-			// — no elements with a lower depth from tree root exist in between two items
-			//	(ie.: left in tree ~ with a smaller indentation)
-			var previousListItem
+
+  W.  O.  R.  K.    C.  O.  N.  T.  I.  U.  E.  S. 
+  
 
 
-			// 1) run a query (when expression doesn't issue temporary tokens)
-			previousListItem = db
-				.get('tokens')
-				.queryTx({	// … 
-					expr: el.expr,
-					parser: null,
-					with: compatible,
-					// When retrieving token data …
-					ref: 123,				// — shares one of the same containers
-					treeDepth_current: 123, // — is on the same level as previous token
-					treeDepth_search: 3,		// — will traverse tree of tokens N levels
-					// Sorting results
-					sort: "desc",
-					limit: 1,
-					recent: 1 // shorthand for the above two parameters
-				})
-				.value()
+*/
 
 			// 2) or check cache (when expression)
 			previousListItem = db
@@ -841,7 +1067,6 @@ const exprWrap = ( exprFn, argList = [
 //
 // ie. expressionType(), expression Type["subtype"]
 //
-
 ```
 
 ```js fn.index.js
@@ -878,7 +1103,6 @@ __indexParams = { // …
     deprioritizeUntil: 2, offloadAt: 3
   },
   methodsWikipedia: { '{functionPath}': '{Wikipedia__URL}' },
-},
 
 
 indexLoops = function( onionPath, // 
@@ -898,7 +1122,9 @@ indexLoops = function( onionPath, //
   },
   persistentIndex = {
     expire: 7*24*3600,
-    priority: { high: 1, low: 4, offload: 3 },
+    priority: {
+      highest: 1, lowest: 4, offloadAt: 3
+    },
     maxLen: 5000,
     minLen: 1000
   }
@@ -919,6 +1145,19 @@ indexLoops = function( onionPath, //
     {priority_a}, {priority_b}
   ]
  */
+```
+
+```js md-bundle-minify.js
+
+var importModuleByKey = [
+
+  {
+    object: jsonion_db,
+   '{keyPath}': '{includeFilePath}'
+  },
+
+]
+
 ```
 
 ```jsonion.tx2gql schema.txt
@@ -1321,17 +1560,16 @@ query nodeChain( languageCode: String, machineTranslation: Boolean,
     "Aggregation": "null",
 
     "Create": "null",
-    "Read": "null",
+      "Read": "null",
     "Update": "null",
     "Delete": "null",
     "Select": ["Filter", "Pick"],
-    "Join": ["Merge"],
+      "Join": ["Merge"],
     "Insert": "null",
 
     "Difference": ["Diff", "~", "%0% ~~ %1%", "~=", "~=="],
     "Patch": ["%0% (%1%)-> %2%", "%0% -(%1%)> %2%"],
     
-    "Fork": "Fork %0% -> %1%",
     "Stem": "Stem %0% -> %1%",
     
     "functionIndexKeyStore": "[%0%](https://wikipedia.org/en/%1%)",
