@@ -1,4 +1,3 @@
-
 # V32SVGn × jsonion
 … special attention afforded to a good read; the roll-out script.
 
@@ -10,7 +9,7 @@ Aligning SVG with modern reactive data sources -- standarized to plug-and-play. 
 
 --- ---———
 
-```jsonion                 /* … document-wide */
+```js jsonion              /* … document-wide */
 
                                        /* ´´´
                                        ´´´ */
@@ -99,8 +98,8 @@ jsonion_db.init({
 
 /* {routeTrie: {__reserved:{}}; var { Integer, String, Number, Float, Array, Object, Timestamp, HashId, Name, Names, Email, PostAddress, PhoneNumber, oneOf, tryOne, optional, caseInsensitive, partialMatch } = jsonion_db._.typeTrie = jsonion.escapeKeys( String, Number, Float, Array, Object, optional ) */
 
-
 ```
+
 
 ```js types.agents.js
 
@@ -111,8 +110,8 @@ export const agentTypes = {
 
 ```
 
-```js db.users.js
 
+```js db.users.js
 /*
 
  # Package: 'jsonion-users'
@@ -173,8 +172,8 @@ __contacts: { _: { // …
 
 ```
 
-```js db.circle.js [!!!]
 
+``` db.circle.js [!!!]
 //
 // ## Circles
 //  … groups of people with common interest
@@ -284,8 +283,9 @@ Entity.augment(
   })
 );
 
-
 ```
+
+
 ```js actionPreset.js
 //  //  //  //  /*
 
@@ -411,7 +411,9 @@ __call: [ redux.allCaps`{action}_{tablePath}` ],
 */  function resolveSuffix__en( wordList ){
 
 }
+
 ```
+
 
 ```js db.stem.js
 /* 
@@ -520,8 +522,10 @@ jsonion.stem.prototype.__schema = () => {
 
 //  Storing content in multiple languages with translation mixins
 //  import { state, draft, translate_request } from 'schema'
+//
 
 ```
+
 
 ```js db.review.js
 //
@@ -557,7 +561,9 @@ const report = {
 //  with any augmented collection
 //  parse pointers to data, markup syntax, ...
 //
+
 ```
+
 
 ```js db.eventsource.js
 //
@@ -618,10 +624,11 @@ var inputSchema = { __standalone: { _: 'string', match: ['object', 'ASC'] }, col
  */
 // findNamespace: ''
 //
+
 ```
 
-```js db.augment.js
 
+```js db.augment.js
 /*
 
  # Logic of `jsonion` database schema definitions
@@ -640,9 +647,12 @@ var find // select
 
 ```
 
+
 ```js schema.primitives.js [!!!]
-//
 /*
+
+Import validators from "validator.js"
+Import validators from "anchor.js"
 
 Import { String, Array, Text, Integer } from "./stdTypes"
 Export { fieldDiff, fieldDiffList, fieldValue }
@@ -680,12 +690,14 @@ const fieldDiff = { // Simple difference
 
 const fieldDiffArray = { // List of modifications
  ...keyPath: String,
-    diff: [ '{diff__String}', '{indexL__Integer}',  '{levensthein__Integer__Optional}' ]
+    diff: [ '{diff__String}', '{indexL__Integer}',  '{levensthein__Integer__optional}' ]
 };
+
 ```
 
-```js text2json/layout/OrderedList
 
+```js text2json/parsingFlow.js
+//
 // Working on parsing in 2019
 
 documentParsingFlow = [
@@ -771,7 +783,20 @@ const parsingProcess = {
  
 ```
 
-```js OrderedList.js
+
+```js text2json/layout/OrderedList.js
+/*
+   const exampleContent = `
+
+ # Überschrift (aha!)
+
+ Here is etwas
+	1. Erste
+	2. Zweite
+ 3. …
+
+  `
+ */
 
 import React from 'react'
 import _ from 'lodash'
@@ -785,17 +810,6 @@ import { // Logical operators — now building a necessary set (with usecases)
 import { Line as NL, Headline as H, Paragraph as P } from './' // Layout blocks
 
 import { escapeExpression as e } from '../util' // function unexistent here yet [!!!]
-
-/* const exampleContent = `
-
- # Überschrift (aha!)
-
- Here is etwas
-	1. Erste
-	2. Zweite
- 3. …
-
-  ` */
 
 
 export default function orderedList (props) {
@@ -848,7 +862,7 @@ export default function orderedList (props) {
   Does a previous list item somehow share the same block?
 		
   Conditions to be met (descending by priority — higher priority first):
- —  at least two cosequent items with an ascending order of numbers exist at same indentation
+ —  at least two cosequent items with an ascending order of numberic indexes exist at a given indentation level
  —  no elements with a shorter distance from data tree root are found in between two items
   ( ie.: left in tree ~ with a smaller indentation )
 
@@ -877,58 +891,31 @@ export default function orderedList (props) {
 /*
 
 
-
-  W.  O.  R.  K.    C.  O.  N.  T.  I.  U.  E.  S. 
+  etc
   
+
+
+//2) or check cache (when expression) //	previousListItem = db.get('tokens.cache').find({ expr: el.expr, blocks: '!!!' }) // … matching IDs //.recent(1).value()//end = (previousListItem) ? previousListItem.index : 1//for (i = input.first ; i <= end ; i++){//if( matchingExpression ){//end++//db.get('parser.runtime').setBufferLen(this.expr) //[!!!] Pass expression/block token ID//	}} //db.get('parser.runtime').resetBufferLen(this.expr) // [!!!] Pass expression/block token ID // return { i } },	trie: {  }} // … Is extensible // if(_.isObject(props.NumberedItem.symbols)) NumberedItem.symbols = extendSymbols(NumberedItem.symbols, props.symbols)
+
+
+  ...
 
 
 */
 
-			// 2) or check cache (when expression)
-			previousListItem = db
-				.get('tokens.cache')
-				.find({ expr: el.expr, blocks: '!!!' }) // … matching IDs
-				.recent(1)
-				.value()
+  return (
 
+    <OrderedList componentLang="en">
 
-			end = (previousListItem) ? previousListItem.index : 1
-			for (i = input.first ; i <= end ; i++){
+      <Scoop>
 
-				if( matchingExpression ){
+        <H />
+        <P />
 
-					end++
-
-					db.get('parser.runtime').setBufferLen(this.expr) // [!!!] Pass expression/block token ID
-				}
-			}
-
-			db.get('parser.runtime').resetBufferLen(this.expr) // [!!!] Pass expression/block token ID
-
-
-			return { i }
-
-		},
-		trie: {  }
-	}
-	// … Is extensible
-	if(_.isObject(props.NumberedItem.symbols))
-		NumberedItem.symbols = extendSymbols(NumberedItem.symbols, props.symbols)
-
-
-	return (
-
-		<OrderedList componentLang="en">
-
-			<Scoop>
-
-				<H />
-				<P />
-
-				<OneOf resolve="auto">
-					<Scenario>
-						<Expr with="{this.NumberedItem}">
-							{children}
+        <OneOf resolve="auto">
+          <Scenario>
+            <Expr with="{this.NumberedItem}">
+             {nodeChildren}
 { /*
 
 	Expressions which are repeated should	not overload the 
@@ -942,23 +929,24 @@ export default function orderedList (props) {
 									{children}
 								</Scenario>
 */ }
-						</Expr>
-					</Scenario>
+            </Expr>
+          </Scenario>
 
-					<Scenario>
-						<Expr with="{this.AlphabeticalItem}">
-							{children}
-						</Expr>
-					</Scenario>
-				</OneOf>
+          <Scenario>
+            <Expr with="{this.AlphabeticalItem}">
+             {nodeChildren}
+            </Expr>
+          </Scenario>
+        </OneOf>
 
-			</Scoop>
+      </Scoop>
 
-		</OrderedList>
-	)
+    </OrderedList>
+  )
 }
 
 ```
+
 
 ```js fn.expressions.js
 
@@ -1067,11 +1055,14 @@ const exprWrap = ( exprFn, argList = [
 //
 // ie. expressionType(), expression Type["subtype"]
 //
+
 ```
 
-```js fn.index.js
 
-__indexParams = { // …
+```js fn.index.js
+// … [in-dev]
+
+__indexParams = {
   lastInsert: ['{t}', '{i}'],
   trie: {
  /*  Optimized fast-access index
@@ -1147,7 +1138,8 @@ indexLoops = function( onionPath, //
  */
 ```
 
-```js md-bundle-minify.js
+
+``` md-bundle-minify.js
 
 var importModuleByKey = [
 
@@ -1159,6 +1151,7 @@ var importModuleByKey = [
 ]
 
 ```
+
 
 ```jsonion.tx2gql schema.txt
 
@@ -1178,7 +1171,7 @@ export default const collections = () => {
 //
 // ////    //*
  # Gesture-Reflection module definitions
-//     /// with jsonion x ( node-rhizome )
+//     /// with jsonion × ( node-rhizome )
 */
 
 
@@ -1425,8 +1418,8 @@ jsonion { path } / Gesture-s
 
 ```
 
-```json ion
 
+```json ion
 {
 '.{propertyName} #': { // … looking for Facebook 'status_updates'
 	 This: "post",
@@ -1457,7 +1450,8 @@ Like dissoluted ions... The encoded parsing rules enter and react with substance
 
 ```
 
-```gql d_b.stem.gql
+
+```gql _.stem.gql
 
 query viewDataRoot( findBy: [StemPath], 
 __id: Int, __keyPath: String, __blockId: Int ): [RootDataNode]
@@ -1546,9 +1540,11 @@ query nodeChain( languageCode: String, machineTranslation: Boolean,
    findBy: [StemPath]
 
 ): [StateChain]
+
 ```
 
-```js integrated.json
+
+```json integrated.json
 {
   "__description": "Register of built-in Types and their synonyms and expression sequences (right-hand)",
   "__types": ["Type", "Synonym", "Abbreviation", "Reference", "Operator"],
@@ -1581,7 +1577,7 @@ query nodeChain( languageCode: String, machineTranslation: Boolean,
     "Index": ["toIndex", "i"],
 
     "MapTo": ["Remap", "Map", "%0% -> %1%"],
-    "Reference": ["Ref", '\"%0%\" => \"%1%\"', "\'%0%\' => \'%1%\'"],
+    "Reference": ["Ref", "\"%0%\" => \"%1%\"", "\'%0%\' => \'%1%\'"],
 
     "Pending": "null",
 
