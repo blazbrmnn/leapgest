@@ -29,12 +29,12 @@ Aligning SVG with modern reactive data sources -- standarized to plug-and-play. 
   hydrate(jsonion_db){
     jsonion_db.forEach( (key, object) => {} )
   },
-  escapeKeys(__reserved){ // …
+  escapeTrieKeys( __reserved ){
     (typeof __reserved === 'object')
-   ? true // trie( __reserved )
+   ? trie( __reserved )
    : reservedNames.forEach( (val) => {} )
   }
-  // … Setter methods
+// … Setter methods
 },
 
 
@@ -45,33 +45,68 @@ Aligning SVG with modern reactive data sources -- standarized to plug-and-play. 
 };
 
 
-jsonion_db.init({
-  ctx: { localStorage: 1,
+  //
+// In-context components (access with adapters)
+ //
+
+var hydrateOnLoad = () => { 
+
+ (typeof window.localStorage !== 'undefined' && ( var state = window.localStorage.get('jsonion.hydrate')) )
+  ? jsonion_db.hydrate( state )
+  : jsonion_db.hydrate(
+ {
+  ctx: {
+    localStorage: {},
+
+   "svg#drop-in": {
+     "{keyPath}": ()=>{},
+     "{countOf.documents}": "{N}"
+    },
    "svg#snow-menu": {"{keyPath}": "{N}"},
    "svg#bevelDoor": {"{keyPath}": "{N}"},
+   "svg#thisScarf": {"{keyPath}": "{N}"},
+
    "html#instagram.com/leapgesture": {
-     "{keyPath}": "{countOf.documents}"
-    }
+     "ctxProxy.api.instagram": ()=>{},
+     "countOf.posts": "{N}",
+     "EventSource.lastInsert": "{timestamp}"
+    },
   },
   ctxProxy: {
-    cache:  { "{keyPath}": {RabbitMQ: "{N}"} },
-    stores: { 
-     "{keyPath}": {
-       "./public/snow-menu.svg": "{N}" },
+    api: {
+      instagram: {
+        filePath: "./public/instagram.jsonion",
+        resolver: ()=>{}
+      }
     },
+    cache:  { "{keyPath}": {RabbitMQ: "{N}"} },
     components: { 
-     "./snow-menu.svg": ["{keyPath}"],
-     "./metacurrency.svgn": ["{keyPath}"],
-     "./instagram.jsonion": ["{keyPath}"]
-    } 
+     "./public/": {
+       "snow-menu.svg": ["{keyPath}"],
+      }
+    },
+    stores: {
+     "./public/": {
+        "snow-menu.svg": ["{N}"]
+      },
+     "./mirror/": {
+       "thisScarf.svg": ["{N}"]
+      },
+    },
   },
-  dbProxy:{ 
+  dbProxy:{
     sqlite: {"{keyPath}": "{N}"},
   },
+  i:{},
   _:{
+    localStorage: {
+     "jsonion.proxy": { "{tabIndex}": "{ ~~ }" },
+     "jsonion.hydrate": "{jsonion_db}"
+    },
     typeTrie: {__reserved:{}},
-    proxyResolver:{
-     "this.tab": "{n}",
+    routeTrie: {},
+    proxyResolvers:{
+     "this.tab": "{tabIndex}",
       ctx:{       
         localStorage:"jsonion.proxy"
        // … one URL/file open twice
@@ -80,24 +115,52 @@ jsonion_db.init({
         NodeJS:"localhost:3000/jsonion/{keyPath}"
       },
       stores:{
-       '{URL}.svg':{
-          BrowserAddon:"tabs.{n}"
-        },
+        BrowserAddon:"{tabIndex}",
         NodeJS:"localhost:3000/jsonion/{keyPath}"
       },
       components:{
-        BrowserExtension:"tabs.{n}"
+        BrowserExtension:"{tabIndex}"
       },
       dbProxy:{
         NodeJS:"localhost:3000/jsonion/{keyPath}"
-      },
+      }
     }
   }
-});
+})
+) };
 
 
 /* {routeTrie: {__reserved:{}}; var { Integer, String, Number, Float, Array, Object, Timestamp, HashId, Name, Names, Email, PostAddress, PhoneNumber, oneOf, tryOne, optional, caseInsensitive, partialMatch } = jsonion_db._.typeTrie = jsonion.escapeKeys( String, Number, Float, Array, Object, optional ) */
 
+```
+
+
+```js instagram.jsonion
+//
+// Simple interpretation of Instagram routes
+{
+  sourceParams: {
+    serviceDomain: "instagram.com"
+  },
+__url: {
+   "http[s]*://instagram.com/": {
+     "__reserved": ["tv", "about"],
+
+     "p/": "{postId}",
+     "(.*)": { __oneOf: [ 
+       "{pageId}", "{userId}", "{entityId}"
+      ]}
+     // … augmented collection(s) to check index for a matching key alias
+    }
+  },
+  routes: {
+   ".entityId": "__fnc",
+   ".userId": "__fnc",
+   ".postId": ()=>{},
+   ".pageId": ()=>{},
+  }
+ // … what next (map of functions, somehow)
+}
 ```
 
 
@@ -111,11 +174,60 @@ export const agentTypes = {
 ```
 
 
+```js fn.index.js
+/*  //  //  //  //  //  //  //  //  //  //  
+
+                           augmentation
+                            collection
+ index   priority           purpose key
+ `````  ```````````     ```````````````````
+   i  {  0, 1, … n  {  {keyPath}__{sortedBy}
+
+
+//  //  { indexLoops, loop, trie }  //  */
+
+
+var indexCfg = {
+    sortedBy: {
+    '{timestamp.update}': 'DESC'
+    },
+    rangeParams: {
+      offset: 0, limit: 30,
+
+    '{timestamp.update}': {
+        a_: 0, b_: char(2^64)
+      }
+    },
+    returnType: {
+      data: true,
+      captions: true,
+      ref: true
+    },
+    config: {
+      expire: {
+        temp: +37,
+        persistent: 7*24*3600,
+      },
+      priority: { highest: 1, lowest: 4, 
+        deprioritizeUntil: 2, offloadAt: 3,
+        locked: 0
+      },
+     //
+      maxRangeLen: 5000,
+      minIndexLen: 100
+    }
+}
+
+```
+
+
 ```js db.users.js
 /*
 
  # Package: 'jsonion-users'
+
  - Augments any database of users, thus keeping track of user records across multiple services
+
  - Pseudonyms in users' credentials are expected to mask real identity; thus decryption key subparts are shared with peers as a secret knot (= DB rel.) tying in public accounts (to reveal with certainty at a later point in own name & by assembling the dispersed, unlocking private key)
 
  */
@@ -139,8 +251,8 @@ const userSchema = { __key: "Users #", ...[Index`
 
  
 __oneOf: [
-  id: { type: Integer, ...Unique },
-  userId: { type: HashId, ...Unique },
+  id: { type: Integer, ...unique },
+  userId: { type: HashId, ...unique },
 ],
 
   ...[ schemaMixin.mapActions( Timestamp, 'create', 'update', 'close', 'remove' ) ],
@@ -154,8 +266,8 @@ __accounts: { _: { // …
 __contacts: { _: { // …
        emails: { flags: optional, type: [Email] },
     firstName: [ optional, Name, 2 ],
-     fullName: [ optional, Names   ],
-      surname: [ optional, Names   ],
+     fullName: [ optional, Names ],
+      surname: [ optional, Names ],
        cities: [ optional, [Names] ],
   homeAddress: [ optional, PostAddress ],
  phoneNumbers: { type: Object, 
@@ -182,8 +294,10 @@ __contacts: { _: { // …
    circleId: null, userId: null
 }) */
 
+
 var Circle = jsonion.stem( 'circles #', {
 __alias:['circle','group++s'],__abbr:["crcl"],
+
 
 __id: { circleId: [oneOf, Integer, String] },
 
@@ -283,6 +397,19 @@ Entity.augment(
   })
 );
 
+```
+
+
+```json schema.org.jsonld
+{
+"@context": {
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "http://schema.org/",
+    "rdfs:subClassOf": { "@type": "@id" },
+    "name": "rdfs:label",
+    "description": "rdfs:comment",
+    "children": { "@reverse": "rdfs:subClassOf" }
+  },
 ```
 
 
@@ -425,7 +552,7 @@ __call: [ redux.allCaps`{action}_{tablePath}` ],
 
  - Compatibility with SQL is planned as an effort for efficiency: sliced views for serving a variety of aspects; relational data model is aligned with indexing; generating tables for augmented collections at peak demand
 
-*/
+ */
 
 import { String, Array, optional } from './Types/'
 import { schemaMixin } from './render.schema'
@@ -451,14 +578,14 @@ jsonion.stem.prototype.__embedKeys = [
  [".tags", [".hashtags", ".\#"]]
 ];
 
-jsonion.stem.prototype.__annotationKeys = {
+jsonion.stem.prototype.__annotationKeys = [
   ".annotations",
  [".ref", ".refs", ".references"],
  [".includes", ".included", ".includesData"], 
   ".contains"
-};
+];
 
-jsonion.stem.prototype.subset = [
+jsonion.stem.prototype.__subsetKeys = [
  [".captions", ".views", ".partials", ".partialViews"],
  [".rootData", ".rootDataNodes"],
  [".rel", ".related", ".relatedData", ".relatedDataNodes"]
@@ -527,18 +654,214 @@ jsonion.stem.prototype.__schema = () => {
 ```
 
 
-```js db.review.js
-//
-//  Type 'reflections': enables commenting contents, giving ability to attach reflected realities during evolving
-const reflection = {
+```gql d_b.stem.gql
 
- // __eventStateful: actions('create', 'remove', 'mutate'),
-//  __eventStateless: actions('delete')
+query viewDataRoot( findBy: [StemPath], 
+__id: Int, __keyPath: String, __blockId: Int ): [RootDataNode]
 
-}; // … with highlights in reference
+type RootDataNode { ${cached} ${dataStore} ${JSON} ${XML} } # oneOf
 
+query viewStems( findBy: [StemPath],
+ __id: Int, __keyPath: String, __blockId: Int ): [StemAugmented]
+
+type StemAugmented {
+ ${stem}
+ ${augmentations}
+ __included: Annotations, __y: [T]
+}
+
+fragment augmentations {
+ ${eventSource} ${translateRequest}
+ ${event} ${reflections} ${highlights}
+ ${leap} ${gesture} ${values}
+ ${tree} ${rhizome} ${related}
+ ${circles} ${permissions}
+ ${mirrors} ${blockchain} ${dht}
+}
+
+input StemPath { ${stemPath} }
+
+fragment stemPath {
+
+ # [BranchTag] × [StateActual] × [ChainHash]
+   stemId: String
+
+ # Determined main branch stemId (hash)
+   main: String
+
+ ${internalPath}
+ ${sourceServiceParams}
+
+   language: [LangCode]          # ISO 936-1
+   branch: [BranchTag]   # Branch identifiers (alphabetical list)
+}
+
+fragment stem { ${stemPath}
+
+ # Branch Head: Current state of data, as published (multilingual)
+   state: [StateActual]
+
+ # Audit Trail: Modifications to data node state (History & Draft)
+   chain: [StateChain]
+}
+
+type Annotations {
+
+ # Complete data nodes
+   nodeList: [StemAugmented]   
+
+ # Partial data node views
+   captions: [StemCaption]
+   rootData: [RootDataNode]  # … unaugmented view
+
+ # Internal references (with 'jsonion')
+ __refs:     [StemRel]         
+
+ # Links to external mirrors
+   mirror:   [MirrorNode]
+
+ # Links to external services
+   linked:   [SourceNode]
+}
+
+query nodeChain( languageCode: String, machineTranslation: Boolean,
+
+ # Pagination offset start
+   stemId: String,
+
+ # Pagination: Returned items count
+   limit: Int, count: Int, next: Int, n: Int, prev: Int,
+
+ # Is there an external source listed?
+   source: Boolean, url: Boolean, domain: String,
+
+ # Is there a source of data validation and backup?
+   mirror: Boolean
+   blockchain: Boolean
+   dht: Boolean
+
+   findBy: [StemPath]
+
+): [StateChain]
+
+
+
+type StateActual {
+ 
+ # Data object
+}
+
+type StateChain {
+
+ # Modifications to RootDataNode view
+ state: Diff
+
+ # Modifications to StemPath
+
+ # Modifications to ${augmentations}
+
+}
+
+type Diff {
+   add: [newFields]
+   mod: [Diff]
+   remove: String
+   n: Int
+ ${checksum}
+ ${timestampFormatted}
+}
+
+type newFields {
+  key: String
+  val: String
+  len: Int
+}
+
+type Diff {
+  key: String
+  diff: String
+  n: Int
+}
+
+fragment checksum {
+ ${md5}
+ ${sha256}
+ ${crc}
+ ${rsaLatest}
+}
+
+fragment timestampFormatted {
+ ${timestamp1970}
+ ${dateTime}
+}
+
+
+type StemCaption { # Partial data node views
+
+}
+
+type MirrorNode { # Links to external mirrors
+
+}
+
+type SourceNode { # Links to external services
+
+}
+
+type StemRel { # Internal references ('jsonion')
+
+}
+
+
+enum TreeType {
+
+  # Category, …
+  HYPERNYM
+
+  # A set of synonymous data nodes (of ~equal proximity)
+  SYNSET
+
+  # A synonymous data entity
+  SYNONYM
+
+  # Subcategory, …
+  HYPONYM
+}
+
+enum RelationRhizomeType {
+
+  # Translations of a data node
+  TRANSLATION
+
+  # Attributed its immediate roots in a related data node
+  STEM
+
+  # Merged into a related data node
+  MERGED
+
+  # Attributed its origin to a related data node
+  ROOT
+
+  # Declaration of main branch
+  MAIN
+
+  # Mirroring another data node (or part of it's branches)
+  MIRROR
+
+  # Has traced and recognized effects to a related data node
+  CAUSE
+
+  # Has recognized its effect with a related data node
+  EFFECT
+}
+
+```
+
+
+```js db.highlight.js
 //
 //  Type 'highlight': in-text markups and referenced contents (attachments)
+
 const highlight = {
 
   //  pointer_field: String,
@@ -548,8 +871,24 @@ const highlight = {
   //  events: ['delete']
 };
 
+```
+
+
+```js db.review.js
+//
+//  Type 'reflections': enables commenting contents, giving ability to attach reflected realities during evolving
+
+const reflection = {
+
+ // __eventStateful: actions('create', 'remove', 'mutate'),
+//  __eventStateless: actions('delete')
+
+}; // … with highlights in reference
+
+
 //
 //  Type 'reports': enables reporting inappropriate contents, falsifying invalid data - both in accord with specific circles
+
 const report = {
 
   //  eventStateful: ['create', 'remove', 'resolve', 'close'],
@@ -700,7 +1039,7 @@ const fieldDiffArray = { // List of modifications
 //
 // Working on parsing in 2019
 
-documentParsingFlow = [
+const documentParsingFlow = [
  'receiveContext',  // … dataset's ctx (automated)
  'receivePropsFrom', // … properties & attributes
 	'receiveObjectsFrom', // … merge in or transform
@@ -714,12 +1053,16 @@ documentParsingFlow = [
  'pending'
 ],
 
+/*
+
 abbreviate = function( array, abbrTrie = {}, abbr = {} ){
    array.forEach( (str) => {
      abbrTrie = intoTrie( str, abbrTrie )
      abbr[( getLeafPath( str, abbrTrie ))] = str
    }
  },
+
+*/
  
 var { createArrayOfObjects, receiveObjectsFromParser, objectsRecreateByDelimiters, receivePropsFromParser, addToContext, js, id__createTemporaryId, __temporary, __notLast, toContext, toDatabasetasks, pending } 
 = abbreviate( documentParsingFlow )
@@ -767,9 +1110,9 @@ const parsingProcess = {
  ],
 
  parseFile: [ // … not expecting XML and JS markup
+  'fileNameToContext',
+  'parseContext',
   'parseDoc',
-  'filenameToContext',
-  'parseContext'
  ],
 
  parseDoc: documentParsingFlow,
@@ -793,8 +1136,8 @@ const parsingProcess = {
  Here is etwas
 	1. Erste
 	2. Zweite
- 3. …
-
+	3. …
+	
   `
  */
 
@@ -1078,15 +1421,14 @@ __indexParams = {
     rangeByKeyIndex: {
      0: [
         [ '{a_}', '{b_}', '{a__utf8}', '{b__utf8}', '{i}', '{n}', '{indexObj__next}', '{indexObj__prev}' ] ],
-    ],
+    },
 
     expireAfter: -1,
-    insertedKeys: [    // … unprocessed inserted row numbers
+    insertedKeys: [ // … unprocessed inserted rows
       { t: null, i: null, key: null },
     ],
-    stepPolynomial: [  // … keyword density at traversed areas
-      { '{routeMatch}': ['{a__utf8}', '{b__utf8}', '{i}', '{n}',
-        '{lastQueryAt}', '{queryFrequency}', '{avgMatchRatio}'] },
+    stepPolynomial: [  // … traversed keyword density
+      { '{routeMatch}': ['{a__utf8}', '{b__utf8}', '{i}', '{n}', '{lastQueryAt}', '{queryFrequency}', '{avgMatchRatio}'] },
     ],
     lastQueryAt: '{timestamp}',
   },
@@ -1136,472 +1478,4 @@ indexLoops = function( onionPath, //
     {priority_a}, {priority_b}
   ]
  */
-```
-
-
-``` md-bundle-minify.js
-
-var importModuleByKey = [
-
-  {
-    object: jsonion_db,
-   '{keyPath}': '{includeFilePath}'
-  },
-
-]
-
-```
-
-
-```jsonion.tx2gql schema.txt
-
-
-      //    //    //    // Beware
-
-     //   _.* => 1|.*  // Mashup
-
-    //   __  => _     // Partials
-
-   //    //    //    // Consideration
-
-
-export default const collections = () => {
-   var collection = {}
-
-//
-// ////    //*
- # Gesture-Reflection module definitions
-//     /// with jsonion × ( node-rhizome )
-*/
-
-
-/*
-
-## Needs
- - Tree structure of definitions, rooted in basic needs 
- ( in overlapping with "wishes", "urges", "desires", "demands" )
-
-   */
-
-collection.need = {}
-
-
-/*
-
-## Resorces
- - Tree structure of resource definitions
-
-   */
-
-collection.resource = {}
-collection.resource_type = {}
-collection.resource_unit = {}
-
-
-collections.resource = { // Link up above collections
-  'schema': {
-    resource_type: ['./link-to/schema.json#internalRef', Rec.rel],
-    resource_unit: ['./link-to/simplSchema.js#exportedVar', Rec.rel]
-  },
-
-  ...collection.resource, // <- repeat main resource
-
-// # Add related data structures:
-  ...collection.resource_unit,
-  ...collection.resource_type
-
-}
-
-
-
-
-/*
-
-## Gestures
- - Symbols of patterns, emerging from recurring (inter)actions and behaviours
-
-   */
-
-collection.gesture = { // Templates, personalized to a specific occasion
-}
-
-
-
-/*
-
-## Leaps
- - A gesture becomes a leap when habits change
- 
-   Q: When does a 'leap' fit in node_stem, as a 'milestone' or a 'pointer' in content evolution flow?
-
-   */
-
-
-
-/*
-
- # Collection: Values
- - Words which are meaningful upon truthfully reflecting shared, interpersonal experiences
-
-   */
-
-collection.value = { // Tree structure of value keywords
-}
-
-collection.value_observable = { // Metrics for measuring a certain effort / impact, tied to values
-};                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-
-
-collections.value_model_contract = {} /* Defined contracts
-  
-  # For example:
-
-  - when a condition is met, words used by a given person / entity are ...
-    replaced with a predefined correction
-    or open for editing anew
-
-*/
-
-
-
-
-/*
-
-  # Collections: What we need, what we can offer, what we value (appreciate)
-
-*/
-
-collections.agency_need = { 
-// List of needs (all-time ; recurring higher)
-// ... described in text or with tags (referenced by ID)
-}
-collections.agency_resource = { // Pool of disclosed resources
-// Governed by entities (a group of people & circles) with defined agency
-}; 
-collections.agency_value = { // Values we care of (enacted and appreciated), narrowing in on preferred ways of doing
-}; 
-                                      
- 
-
-/*
-
-  # Collection: Gestures
-  - Desired scenarios - descriptions of recurring patterns (activities and flowing resources)
-
-*/
-
-collections.agency_gesture = {}
-collections.agency_gesture_resource = { // Typical / average flow of resources
-}
-collections.agency_gesture_transaction = { // Contains a set of transactions 
-};
-
-
-
-/*
-
-  # Collection: Transactions
-  - Occurence of a gesture or its variant - a transaction
-  - Flow of ... among giving and receiving entities (meta data about an act of sharing)
-
-*/
-
-collections.agency_transaction = {}
-
-// Resources and energies, which flowed while sharing
-collections.agency_transaction_resource = {}
-
-// Needs, fulfilled with this gesture
-collections.agency_transaction_need = {}
-
-// Reflected, enacted values (describing intangibles)
-collections.agency_transaction_value = {}
-
-
-# Resource
-jsonion { path } / Resource
-
- - name
- - type
- - description
- - energy
- - matter
- - unfinished
-
-…/	Resource_Component
-	- resource_id
- - referenced_resource_id
-
-
-
-## Media resource
-jsonion { path } / Media
-
-
-
-## Gesture
-jsonion { path } / Gesture-s
-
- - title
- - description
- - time
- - location
- ( create, publish, update | close, archive, unlist, delete )
-
-…/ { Stem }(Gesture)
-
-  …/ From
-  	- gesture_id
-  	- entity_id 
-   ( submit | confirm | close, delete )
-
-  …/	To
-   - gesture_id
-	  - entity_id
-   - confirmed
-  	- confirmed_time
-
-  …/ Resource
-  	- resource_id
-
-
-
-## Leap
-{ path } / Leap-s
-
- - title
- - description
- - time_added
-( add, update )
-
-…/ Gesture
- - title
- - description
-
-
-
-## Reflection
-{ path } / Reflection-s
-
- - subject
- - story
- - time
-
-…/ Value
-	- reflection_id
- - entity_id
- - value_id
- - color_hex
-
-…/ Context
-	- reflection_id
-	- value_id
-	- entity_id
-	- context_id
-
-…/ Leap
-		- reflection_id
-		- entity_id
-		- value_id
-		- relative_value_id
-		- ratio
-
-…/ Involved
-	- reflection_id
-	- entity_id
- - confirmed
-
-…/ Trusted
- - reflection_id
- - entity_id
-	- trusted
-
-```
-
-
-```json ion
-{
-'.{propertyName} #': { // … looking for Facebook 'status_updates'
-	 This: "post",
-__allOf: [], // … is this the dataset we're looking for?
-__oneOf: [],
-	 map: ['timestamp', 'full_name', 'action', 'post', 'event_name', 'place_name'],
-
- '.title': {
-    Remove: true, // … task executed after jsIons react, while finally mapping to JSON tree
-
-		 // jsIons transform data state (where RegExp condition !false)
-	  '/(.*) shared an event./': { 
-	     As: ['full_name'],
-	    'post.action': 'event_shared'
- 	  },
- 	 '/(.*) was attending (.*) at (.*)./': {
-	     As: ['full_name', 'event_name', 'place_name'],
-	    'post.action': 'event_attending'
-	   }
-  }
-},
-/*
-
-Like dissoluted ions... The encoded parsing rules enter and react with substances kept in a medium's data structure; so to harness and map modified contents into a resulting JSON data tree.
-
-*/
-}
-
-```
-
-
-```gql _.stem.gql
-
-query viewDataRoot( findBy: [StemPath], 
-__id: Int, __keyPath: String, __blockId: Int ): [RootDataNode]
-
-type RootDataNode { ${cached} ${dataStore} ${JSON} ${XML} } # oneOf
-
-query viewStems( findBy: [StemPath],
- __id: Int, __keyPath: String, __blockId: Int ): [StemAugmented]
-
-type StemAugmented {
- ${stem}
- ${augmentations}
- __included: Annotations, __y: [T]
-}
-
-fragment augmentations {
- ${eventSource} ${translateRequest}
- ${event} ${reflections} ${highlights}
- ${leap} ${gesture} ${values}
- ${tree} ${rhizome} ${related}
- ${circles} ${permissions}
- ${mirrors} ${blockchain} ${dht}
-}
-
-input StemPath { ${stemPath} }
-
-fragment stemPath {
-
- # [BranchTag] × [StateActual] × [ChainHash]
-   stemId: String
-
- # Determined main branch stemId (hash)
-   main: String
-
- ${internalPath}
- ${sourceServiceParams}
-
-   language: [LangCode]          # ISO 936-1
-   branch: [BranchTag]   # Branch identifiers (alphabetical list)
-}
-
-fragment stem { ${stemPath}
-
- # Branch Head: Current state of data, as published (multilingual)
-   state: [StateActual]
-
- # Audit Trail: Modifications to data node state (History & Draft)
-   chain: [StateChain]
-}
-
-type Annotations {
-
- # Complete data nodes
-   nodeList: [StemAugmented]   
-
- # Partial data node views
-   captions: [StemCaption]
-   rootData: [RootDataNode]  # … unaugmented view
-
- # Internal references (with 'jsonion')
- __refs:     [StemRel]         
-
- # Links to external mirrors
-   mirror:   [MirrorNode]
-
- # Links to external services
-   linked:   [SourceNode]
-}
-
-query nodeChain( languageCode: String, machineTranslation: Boolean,
-
- # Pagination offset start
-   stemId: String,
-
- # Pagination: Returned items count
-   limit: Int, count: Int, next: Int, n: Int, prev: Int,
-
- # Is there an external source listed?
-   source: Boolean, url: Boolean, domain: String,
-
- # Is there a source of data validation and backup?
-   mirror: Boolean
-   blockchain: Boolean
-   dht: Boolean
-
-   findBy: [StemPath]
-
-): [StateChain]
-
-```
-
-
-```json integrated.json
-{
-  "__description": "Register of built-in Types and their synonyms and expression sequences (right-hand)",
-  "__types": ["Type", "Synonym", "Abbreviation", "Reference", "Operator"],
-  "__apply": ["/\s/", "__strDecode"],
-  
-  "P <= TangibleProcess": {
-
-    "Abbreviation": ["Abbrev", "Abbr"],
-    "Aggregation": "null",
-
-    "Create": "null",
-      "Read": "null",
-    "Update": "null",
-    "Delete": "null",
-    "Select": ["Filter", "Pick"],
-      "Join": ["Merge"],
-    "Insert": "null",
-
-    "Difference": ["Diff", "~", "%0% ~~ %1%", "~=", "~=="],
-    "Patch": ["%0% (%1%)-> %2%", "%0% -(%1%)> %2%"],
-    
-    "Stem": "Stem %0% -> %1%",
-    
-    "functionIndexKeyStore": "[%0%](https://wikipedia.org/en/%1%)",
-    "Initialization": "Init",
-    "Input": "I",
-    "Output": "O",
-    "PointOfValidation": ["API", "Mirror", "Package", "Module", "Component", "Function"],
-    
-    "Index": ["toIndex", "i"],
-
-    "MapTo": ["Remap", "Map", "%0% -> %1%"],
-    "Reference": ["Ref", "\"%0%\" => \"%1%\"", "\'%0%\' => \'%1%\'"],
-
-    "Pending": "null",
-
-    "Query": "null",
-    "Mutate": "null",
-
-    "StringVariable": ["\{Var\}", "{%}", "{{%}}", "${%}"],
-
-    "Trie": ["%0% { %1%"],
-
-    "Validation": "null"
-  },
-
-  "__caseInsensitive": {
-    "jsonion": "null",
-    "md": ["Markdown", "CommonMark"],
-    "regex": ["RegExp", "/%/"],
-    "v32svgn": "null",
-    "validation": ["valida.jsonion", "valida", "validate"],
-  },
-
-  "__footing": [
-    "including String and Numeric types, as commonly redefined in schema validation"
-  ],
-  "__syntax": "JavaScript ES6"
-}
 ```

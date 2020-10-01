@@ -1,0 +1,22 @@
+{
+  "name": "",
+  "version": "",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "build": "",
+    "dev": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsonion/..."
+  },
+  "keywords": [
+
+  ],
+  "author": "",
+  "license": "",
+  "bugs": {
+    "url": ""
+  }
+}
