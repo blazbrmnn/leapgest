@@ -638,19 +638,6 @@ jsonion.stem.prototype.__schema = () => {
 
 });
 
-
-/*
-
-##  Augmentation type: 'rhizome' 
- …  is a catch-all category for indirectly and potentially related contents... co-evolving, concurrent, ambiguous and weakly correlated; in scrambled codification
-
-*/
-//  import { rhizome_related_node, rhizome_by_type, contained_relation_types, agent_relation_types, external_relation_types } from 'schema';
-
-//  Storing content in multiple languages with translation mixins
-//  import { state, draft, translate_request } from 'schema'
-//
-
 ```
 
 
