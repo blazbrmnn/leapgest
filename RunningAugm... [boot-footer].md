@@ -136,10 +136,10 @@ var Resolver = function( args = {}, dataRoot = onionStem ){
 export default const collections = () => {
    var collection = {}
 
-//
-// ////    //*
+/*
+
  # Gesture-Reflection module definitions
-//     /// with jsonion × ( node-rhizome )
+   with jsonion
 */
 
 
