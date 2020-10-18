@@ -1,81 +1,3 @@
-``` md-bundle-minify.js
-
-var importModuleByKey = [
-
-  {
-    object: jsonion_db,
-   '{keyPath}': [ '{includeFilePath}' ]
-  },
-
-]
-
-```
-
-
-```json integrated.json
-{
-  "__description": "Register of built-in Types and their synonyms and expression sequences (right-hand)",
-  "__types": ["Type", "Synonym", "Abbreviation", "Reference", "Operator"],
-  "__apply": ["/\s/", "__strDecode"],
-  
-  "P <= TangibleProcess": {
-
-    "Abbreviation": ["Abbrev", "Abbr"],
-    "Aggregation": "null",
-
-    "Create": "null",
-      "Read": "null",
-    "Update": "null",
-    "Delete": "null",
-    "Select": ["Filter", "Pick"],
-      "Join": ["Merge"],
-    "Insert": "null",
-
-    "Difference": ["Diff", "~", "%0% ~~ %1%", "~=", "~=="],
-    "Patch": ["%0% (%1%)-> %2%", "%0% -(%1%)> %2%"],
-    
-    "Stem": "Stem %0% -> %1%",
-    
-    "functionIndexKeyStore": "[%0%](https://wikipedia.org/en/%1%)",
-    "Initialization": "Init",
-    "Input": "I",
-    "Output": "O",
-    "PointOfValidation": ["API", "Mirror", "Package", "Module", "Component", "Function"],
-    
-    "Index": ["toIndex", "i"],
-
-    "MapTo": ["Remap", "Map", "%0% -> %1%"],
-    "Reference": ["Ref", "\"%0%\" => \"%1%\"", "\'%0%\' => \'%1%\'"],
-
-    "Pending": "null",
-
-    "Query": "null",
-    "Mutate": "null",
-
-    "StringVariable": ["\{Var\}", "{%}", "{{%}}", "${%}"],
-
-    "Trie": ["%0% { %1%"],
-
-    "Validation": "null"
-  },
-
-  "__caseInsensitive": {
-    "jsonion": "null",
-    "md": ["Markdown", "CommonMark"],
-    "regex": ["RegExp", "/%/"],
-    "v32svgn": "null",
-    "validation": ["valida.jsonion", "valida", "validate"],
-  },
-
-  "__footing": [
-    "including String and Numeric types, as commonly redefined in schema validation"
-  ],
-  "__syntax": "JavaScript ES6"
-}
-
-```
-
-
 ```js manifest-gestrz.js
 //
 //  //  //
@@ -136,10 +58,10 @@ var Resolver = function( args = {}, dataRoot = onionStem ){
 export default const collections = () => {
    var collection = {}
 
-/*
-
+//
+// ////    //*
  # Gesture-Reflection module definitions
-   with jsonion
+//     /// with jsonion × ( node-rhizome )
 */
 
 

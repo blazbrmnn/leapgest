@@ -1,7 +1,8 @@
 # V32SVGn × jsonion
 … special attention afforded to a good read; the roll-out script.
 
-Aligning SVG with modern reactive data sources -- standarized to plug-and-play. Replacing .jsx polyfills with good vibes.
+Aligning SVG with modern reactive data sources. Replacing .jsx polyfills with good vibes, plug-and-play.
+
 
 ## Resolving unique paths among a variety of data types
    ie. ".status_updates # ({measureOfUniqueness}) => fbPosts"
@@ -62,24 +63,47 @@ var hydrateOnLoad = () => {
      "{keyPath}": ()=>{},
      "{countOf.documents}": "{N}"
     },
-   "svg#snow-menu": {"{keyPath}": "{N}"},
+   "svg#snow-menu": {
+      cache: "{N}"
+    },
    "svg#bevelDoor": {"{keyPath}": "{N}"},
-   "svg#thisScarf": {"{keyPath}": "{N}"},
+   "svg#thisScarf": {
+     "{keyPath}": "{N}",
+     "EventSource.lastInsert": "{timestamp}"
+    },
 
    "html#instagram.com/leapgesture": {
-     "ctxProxy.api.instagram": ()=>{},
+     "ctxProxy.web.Instagram": ()=>{},
+     "countOf.posts": "{N}",
+     "EventSource.lastInsert": "{timestamp}"
+    },
+
+   "html#facebook.com/santappl": {
+     "ctxProxy.api.Facebook": ()=>{},
+     "ctxProxy.web.Facebook": ()=>{},
      "countOf.posts": "{N}",
      "EventSource.lastInsert": "{timestamp}"
     },
   },
   ctxProxy: {
     api: {
-      instagram: {
-        filePath: "./public/instagram.jsonion",
-        resolver: ()=>{}
+      Facebook: {
+        router: "./public/facebook.jsonion",
+        oAuth: "./local/oauth.facebook.json",
+        resolver: __GraphQL
       }
     },
-    cache:  { "{keyPath}": {RabbitMQ: "{N}"} },
+    web: {
+      Instagram: {
+        routeMap: "./public/instagram.jsonion",
+        resolver: __xhtmlResolver
+      },
+      Facebook: {
+        router: "./public/facebook.jsonion",
+        resolver: __xhtmlResolver
+      }
+    },
+    cache: { "{keyPath}": {RabbitMQ: "{N}"} },
     components: { 
      "./public/": {
        "snow-menu.svg": ["{keyPath}"],
@@ -94,7 +118,7 @@ var hydrateOnLoad = () => {
       },
     },
   },
-  dbProxy:{
+  dbProxy: {
     sqlite: {"{keyPath}": "{N}"},
   },
   i:{},
@@ -126,8 +150,8 @@ var hydrateOnLoad = () => {
       }
     }
   }
-})
-) };
+} )};
+
 
 
 /* {routeTrie: {__reserved:{}}; var { Integer, String, Number, Float, Array, Object, Timestamp, HashId, Name, Names, Email, PostAddress, PhoneNumber, oneOf, tryOne, optional, caseInsensitive, partialMatch } = jsonion_db._.typeTrie = jsonion.escapeKeys( String, Number, Float, Array, Object, optional ) */
@@ -142,7 +166,7 @@ var hydrateOnLoad = () => {
   sourceParams: {
     serviceDomain: "instagram.com"
   },
-__url: {
+  web: {
    "http[s]*://instagram.com/": {
      "__reserved": ["tv", "about"],
 
@@ -153,13 +177,14 @@ __url: {
      // … augmented collection(s) to check index for a matching key alias
     }
   },
-  routes: {
+  api: {},
+  router: {
    ".entityId": "__fnc",
    ".userId": "__fnc",
    ".postId": ()=>{},
    ".pageId": ()=>{},
   }
- // … what next (map of functions, somehow)
+ // … what next (map function bindings, somehow)
 }
 ```
 
@@ -175,47 +200,47 @@ export const agentTypes = {
 
 
 ```js fn.index.js
-/*  //  //  //  //  //  //  //  //  //  //  
+/*  //  //  //  //  //  //  //  //  //
 
-                           augmentation
-                            collection
- index   priority           purpose key
- `````  ```````````     ```````````````````
+                          augmentation
+                         collection
+ index    priority      purpose
+ `````   ``````````    `````````````` `````
    i  {  0, 1, … n  {  {keyPath}__{sortedBy}
 
 
-//  //  { indexLoops, loop, trie }  //  */
+//  //  { indexLoops, loop, trie }  */
 
 
 var indexCfg = {
-    sortedBy: {
-    '{timestamp.update}': 'DESC'
-    },
-    rangeParams: {
-      offset: 0, limit: 30,
+  sortedBy: {
+   '{timestamp.update}': 'DESC'
+  },
+  rangeParams: {
+    offset: 0, limit: 30,
 
-    '{timestamp.update}': {
-        a_: 0, b_: char(2^64)
-      }
-    },
-    returnType: {
-      data: true,
-      captions: true,
-      ref: true
-    },
-    config: {
-      expire: {
-        temp: +37,
-        persistent: 7*24*3600,
-      },
-      priority: { highest: 1, lowest: 4, 
-        deprioritizeUntil: 2, offloadAt: 3,
-        locked: 0
-      },
-     //
-      maxRangeLen: 5000,
-      minIndexLen: 100
+   '{timestamp.update}': {
+      a_: 0, b_: char(2^64)
     }
+  },
+  returnType: {
+    data: true,
+    captions: true,
+    refs: true
+  },
+  config: {
+    expire: {
+      temp: +37,
+      persistent: 7*24*3600*30,
+    },
+    priority: { highest: 1, lowest: 4, 
+      deprioritizeUntil: 2, offloadAt: 3,
+      locked: 0
+    },
+   //
+    maxRangeLen: 5000,
+    minIndexLen: 100
+  }
 }
 
 ```
@@ -332,7 +357,8 @@ __actions: [
 
 Circle.actionList = [
  "join", "invite", "decline",
- "publish", "comment"
+ "publish", "comment",
+ "unpublish", "leave"
 ];
 
 
@@ -341,14 +367,14 @@ Circle.augment(
   d_b.link({
    "circles":{
       cache:{
-       '{source}':{
-         remap: { }},
+       "{source}":{
+         remap: {/*...*/} },
       }
     }
   }), 
 
   d_b.regActions({
-  __actionTpl: null,
+    __actionTpl: null,
       j: ()=>{},
     dec: ()=>{},
       i: ()=>{},
@@ -410,6 +436,11 @@ Entity.augment(
     "description": "rdfs:comment",
     "children": { "@reverse": "rdfs:subClassOf" }
   },
+
+// ...
+//
+
+}
 ```
 
 
@@ -432,27 +463,35 @@ Entity.augment(
 
 //  //  //  //  //  //  //  //
 
+// … [in-dev]
+//
+
 var preset = ( source = {
   app:{}, pckg:{}, api:{}, offline:{}
-}, // /\
-  /*..*/  dictionaryTrie = actions__en, tpl = null
-)   =>   {
+ }, //
+  /*.*/  dictionaryTrie = actions__en, tpl = null
+)   =>  {
 
 
   if( !tpl )
- (tpl = {
+ (
+  var { 
+    jsonion, redux,
+    json, sql
+  } = d_b.augmentation.renderProps, 
+
+  tpl = {
 
   '{0}': [ 'collection', 'object', 'table', caseInsensitive ],
 '{key}': { '{0}':{'Name': $}, partialMatch.left },
 
 ﻿__augment: [
-    standalone`{augmentation}`, // … 
     jsonion.embed`{ keyPath }.{ augmentation }`,
-    jsonion.sql.embed`{ tablePath }_{ augmentation }`
+    jsonion.embed.sql`{ tablePath }_{ augmentation }`
   ],
-  id: [ 'id', 'Id', jsonion`{key}Id`,
-    sql`{key}_id`, jsonion`{key} # .[Ii]d`,
-    jsonion`{key}.[Ii]d`, '...relation' ],
+  id: [ 'id', 'Id', json`{key}Id`,
+    sql`{key}_id`, json`{key} # .[Ii]d`,
+    json`{key}.[Ii]d`, '...relation' ],
   relation: [__match:[__index, {__gte: 1}]],
   user:[ 
     json`{enacted}By`, sql`{enacted}_by` 
@@ -461,7 +500,7 @@ var preset = ( source = {
     json`{enacted}As`, sql`{enacted}_as` 
   ],
   agentType: [
-    json`{enacting}{AgentType}`,  sql`{enacting}_{agentType}`, 
+    json`{enacting}{AgentType}`, sql`{enacting}_{agentType}`, 
     json`{enacted}By{AgentType}`, sql`{enacted}_by_{agentType}`, 
   ],
   timestamp: [ {'/[Tt]/':{ime:{stamp:$}}}, json`{action}At`,
@@ -637,6 +676,19 @@ jsonion.stem.prototype.__schema = () => {
  })
 
 });
+
+
+/*
+
+##  Augmentation type: 'rhizome' 
+ …  is a catch-all category for indirectly and potentially related contents... co-evolving, concurrent, ambiguous and weakly correlated; in scrambled codification
+
+*/
+//  import { rhizome_related_node, rhizome_by_type, contained_relation_types, agent_relation_types, external_relation_types } from 'schema';
+
+//  Storing content in multiple languages with translation mixins
+//  import { state, draft, translate_request } from 'schema'
+//
 
 ```
 
@@ -960,14 +1012,11 @@ var inputSchema = { __standalone: { _: 'string', match: ['object', 'ASC'] }, col
  # Logic of `jsonion` database schema definitions
  … harvesting granularity of SQL data relations model (enabling further indexing and refactoring)
 
- */// Should export possible actions, relevant to what and when (in cosequence)
-
-
-var initDB // on first load (window || node.js) ; else
+ */// Should export cosequent, possible actions  (relevant to what and when)
 
 var createCollection // write schema to LocalStorage, .json file (export schema; store file), SQL
 
-var indexRelation // Trie type index, SQL add index key
+var indexRelation // SQL add relational key index
 
 var find // select
 
@@ -1040,16 +1089,14 @@ const documentParsingFlow = [
  'pending'
 ],
 
-/*
 
-abbreviate = function( array, abbrTrie = {}, abbr = {} ){
-   array.forEach( (str) => {
-     abbrTrie = intoTrie( str, abbrTrie )
-     abbr[( getLeafPath( str, abbrTrie ))] = str
-   }
- },
+var abbreviate = function( array, abbrTrie = {}, abbr = {} ){
+  array.forEach( (str) => {
+    abbrTrie = intoTrie( str, abbrTrie )
+    abbr[str] = getLeafPath( str, abbrTrie )
+  })
+})
 
-*/
  
 var { createArrayOfObjects, receiveObjectsFromParser, objectsRecreateByDelimiters, receivePropsFromParser, addToContext, js, id__createTemporaryId, __temporary, __notLast, toContext, toDatabasetasks, pending } 
 = abbreviate( documentParsingFlow )
@@ -1279,111 +1326,112 @@ export default function orderedList (props) {
 
 
 ```js fn.expressions.js
-
-export {
-  exprWrap, extendGen,
-  generateTokenId
-
-  // stdExpr, noSuffix, withSuffix (some RegExp types)
-}
-
-// Understand expressions, deterministic first off (NSFW)?
 /*
 
 ## Expression function wrapper validates "arguments" and resolves subtypes
 
-*/  //  //  //
+*/
 
-const exprWrap = ( exprFn, argList = [
- /* Sets of arguments: runtime, subtype (& internal) */
-] ) => {
+const exprWrap = function( 
+  exprFn,
+  exprName,
+  invokingTrie = {},
+
+  inputSchema = [
+ /*
+    {__runtime: {}},
+    {__subtype: {}},
+    {__config: {}}
+  */
+  ],
+
+  config = {},
+  subtype = {},
+  runtime = {}
+){
+
+  var err,
+  params = (inputSchema.length)
+ ? null
+ : d_b.schemaObject(inputSchema)
+      .addArgs({
+        __config: config, 
+        __subtype: subtype,
+        __runtime: runtime 
+      })
+      .eval()
 
 
-	 var wrap = { /* … will await a call in memory */ },
-  inputSchema = null, err = null
+  type = () => {
+    return exprFn( ...this.arguments )
+  };
 
-  if ( !argList.length ){ // Check to save some memory
-    var { 
-     invokeSeq, inputSchema, configInternal 
-    } = exprFn() // … an introductory greeting call
-  }
+  type.name = exprName;
+  type.invokeWith = 
+     ( invokingTrie.length )
+     ? invokingTrie : null;
+
+  type.runValidated = () => {};
+/* type.defineStem = null; */
+
+  type.config = (config) 
+ ? config : null;
+
 
 
   //
-  // Expression validation layer
+  // Wrap up the following processes …
+  //
 
-  const runValid = function( 
-   fn = exprFn, argList = argList, schema = inputSchema 
+  const validateAndRun = function(
+    runtimeArgs = null, 
+    subtypeArgs = null
   ){
 
-    if( !schema )
-      var inputSchema = exprFn('inputSchema')
-
-    // Check inputs
-    return ( err = evaluateArgs(inputSchema, argList) )
-    ? fn( argList ) 
-    : err
-  }
-
-
-  //
-  // Wrapping up ...
-  //
-
-  wrap = (runtimeArgs = null, subtypeArgs = null) => {
-
-    var argList = ( runtimeArgs || subtypeArgs ) 
-      ? mergeArrays( runtimeArgs, subtypeArgs)
-      : null
-
-    if ( !inputSchema )
-      var inputSchema = exprFn('inputSchema')
-
-    return runValid( exprFn, argList, schema ) };
-
-
-  wrap.defineType = ( typeName, typeArgs ) => {
-
-    if ( !inputSchema )
-      var { 
-       invokeSeq, inputSchema, configInternal 
-      } = exprFn({ 'greetWith': argList })
-
-    var wrapType = function( runtimeArgs = null ){
+    //
+    // Validate arguments & remap to input schema
     
-      var argList = ( runtimeArgs )
-        ? mergeArrays( runtimeArgs, typeArgs )
-        : typeArgs
-
-      return runValid( exprFn, argList, inputSchema )
-    }
-
-    wrapType.config = configInternal,
-    wrapType.invokeSeq = invokeSeq
-
-    return wrapType
-  }
-
-  //
-  // … Any differences here and there?
-  // ( .config and .invokeSeq )
-  //
-
-  if (inputSchema) {
-    wrap.config = configInternal
-    wrap.invokeSeq = invokeSeq
+    if( runtimeArgs || subtypeArgs )
+      params.addArgs({
+        __runtime: runtimeArgs,
+        __subtype: subtypeArgs
+      })
+      .eval();
+    
+   (var errors = d_b(params, __err))
+    ? return { __err: errors }
+    : return exprFn( params.remap() ) 
   }
 
 
-  return wrap;
-} // … consider storing within wraps the "db.tokens" references, and greeting's object's "checksum" values (for comparison)
+  type.runValidated = (
+    runtimeArgs = null, subtypeArgs = null
+  ) => {
+
+    if( !inputSchema.length && !params )
+      return exprFn( ...this.arguments )
+
+    return validateAndRun( runtimeArgs, subtypeArgs ) 
+  };
+
+
+  return type;
+
+} // … consider storing data state (eg. tokens and data references, checksum diff for comparison, ...)
+
+/*
+
+const stemExpr = (
+    subtype
+
+*/
 
 
 //
 // # Invoking a variety of types by arguments
 // … storing and accessing subtypes of one expression
 //
-// ie. expressionType(), expression Type["subtype"]
+// ie. expressionType(), expressionType["subtype"]
 //
 
 ```
