@@ -73,14 +73,14 @@ var hydrateOnLoad = () => {
     },
 
    "html#instagram.com/leapgesture": {
-     "ctxProxy.web.Instagram": ()=>{},
+     "ctxProxy.site.Instagram": ()=>{},
      "countOf.posts": "{N}",
      "EventSource.lastInsert": "{timestamp}"
     },
 
    "html#facebook.com/santappl": {
      "ctxProxy.api.Facebook": ()=>{},
-     "ctxProxy.web.Facebook": ()=>{},
+     "ctxProxy.site.Facebook": ()=>{},
      "countOf.posts": "{N}",
      "EventSource.lastInsert": "{timestamp}"
     },
@@ -93,7 +93,7 @@ var hydrateOnLoad = () => {
         resolver: __GraphQL
       }
     },
-    web: {
+    site: {
       Instagram: {
         routeMap: "./public/instagram.jsonion",
         resolver: __xhtmlResolver
@@ -121,14 +121,34 @@ var hydrateOnLoad = () => {
   dbProxy: {
     sqlite: {"{keyPath}": "{N}"},
   },
-  i:{},
+  i:{
+    trie:{
+      route: {},
+        db: {__:{ i:{}, o:{} }},
+      type: {__:{ reserve:{} }},
+      action:  {__:{ list:{} }},
+      schema:  {__:{ list:{} }},
+      keyword: {__:{ objects:{} }}
+    },
+   "{chr.0}":{
+     "{keyPath}": {},
+     "{keyPath}__{sortedBy}": {},
+     "{tableKey}": {},
+     "{tableKey}": {},
+     "{collectionKey}": {},
+     "{collectionKey}__{sortedBy}": {},
+     "{augmentationKey}": {},
+     "{augmentationKey}": {},
+     "{purposeKey}": {},
+     "{purposeKey}__{sortedBy}": {}
+    }
+  },
   _:{
     localStorage: {
      "jsonion.proxy": { "{tabIndex}": "{ ~~ }" },
      "jsonion.hydrate": "{jsonion_db}"
     },
-    typeTrie: {__reserved:{}},
-    routeTrie: {},
+
     proxyResolvers:{
      "this.tab": "{tabIndex}",
       ctx:{       
@@ -154,7 +174,7 @@ var hydrateOnLoad = () => {
 
 
 
-/* {routeTrie: {__reserved:{}}; var { Integer, String, Number, Float, Array, Object, Timestamp, HashId, Name, Names, Email, PostAddress, PhoneNumber, oneOf, tryOne, optional, caseInsensitive, partialMatch } = jsonion_db._.typeTrie = jsonion.escapeKeys( String, Number, Float, Array, Object, optional ) */
+/* {routeTrie: {__reserved:{}}; var { Integer, String, Number, Float, Array, Object, ArrayOfStrings, ArrayOfNumbers, ArrayOfObjects, Timestamp, HashId, Name, Names, Email, PostAddress, PhoneNumber, contains, oneOf, try, optional, caseInsensitive, partialMatch } = jsonion_db._.typeTrie = jsonion.escapeKeys( String, Number, Float, Array, Object, optional ) */
 
 ```
 
@@ -166,7 +186,7 @@ var hydrateOnLoad = () => {
   sourceParams: {
     serviceDomain: "instagram.com"
   },
-  web: {
+  site: {
    "http[s]*://instagram.com/": {
      "__reserved": ["tv", "about"],
 
@@ -212,21 +232,51 @@ export const agentTypes = {
 //  //  { indexLoops, loop, trie }  */
 
 
-var indexCfg = {
-  sortedBy: {
-   '{timestamp.update}': 'DESC'
+var searchParams = { // ...
+  match: {
+   '{keyPath}': '{value}',
+   '{augmentation}.{keyPath}': '{value}',
+   '{relatedCollection}.{keyPath}': {
+      __oneOf: {
+       '{keyPath}': {__oneOf: ['{value}']}
+    } }
   },
-  rangeParams: {
+  matchCase: [
+  {
+   '{keyPath}.{key}': {
+     '{key}': '{value}'
+    },
+   '{augmentation}.{keyPath}': '{value}',
+   '{relatedCollection}.{keyPath}': {
+      __oneOf: {
+       '{keyPath}': {__oneOf: ['{value}']}
+    } }
+  }
+  ],
+  range: {
     offset: 0, limit: 30,
 
    '{timestamp.update}': {
       a_: 0, b_: char(2^64)
     }
   },
+  flags: [__caseInsensitive]
+}
+
+var indexCfg = {
+  sortedBy: {
+   '{timestamp.update}': 'DESC'
+  },
+  rangeParams: {
+   '{timestamp.update}': {
+      a_: 0, b_: char(2^64)
+    }
+  },
   returnType: {
-    data: true,
-    captions: true,
-    refs: true
+    srcData: true,
+    partial: true,
+    caption: true,
+    ref: true
   },
   config: {
     expire: {
@@ -485,7 +535,7 @@ var preset = ( source = {
   '{0}': [ 'collection', 'object', 'table', caseInsensitive ],
 '{key}': { '{0}':{'Name': $}, partialMatch.left },
 
-﻿__augment: [
+__augment: [
     jsonion.embed`{ keyPath }.{ augmentation }`,
     jsonion.embed.sql`{ tablePath }_{ augmentation }`
   ],
@@ -582,62 +632,109 @@ __call: [ redux.allCaps`{action}_{tablePath}` ],
 
 
 ```js db.stem.js
-/* 
+/*  //  //  //  //  //  //
 
- # Schema of a recent data state block
+ # Schema of a data node
  … a uniform way of accessing a data node's context through time
 
  - JSON objects, consistent across data sources & store implementations (in-memory Key-Value stores & message queues, NoSQL databases)
 
  - Compatibility with SQL is planned as an effort for efficiency: sliced views for serving a variety of aspects; relational data model is aligned with indexing; generating tables for augmented collections at peak demand
 
- */
+//  //  //  //  //  //  */
 
 import { String, Array, optional } from './Types/'
 import { schemaMixin } from './render.schema'
 
+ 
+jsonion.stem.prototype.__pointers = {
+  __enumType: [__optional, __oneToMany,
+    "ID", "TIMESTAMP", "RELATIONAL", "REF", "REVERSE-REF", "CAPTION", "MIXIN", "AUGMENTATION"
+  ],
+  action: {},
+  valid: {},
+  time: {},
+  src: {}, rels: {},
+  augm: {}, embed: {},
+  stats: {}, chksum: {},
+  subset: {}, private: {},
+  compute: ["__{keyPatn} -> .{keyPath}"]
+},
 
-jsonion.stem.prototype.__validationKeys = [
- [".valid", ".valida", ".validation"],
- [".cksum", ".chksum", ".checksum", ".checksums"],
- [".hashchain", ".hashChain"],
- [".proofOf", [".proofOfWork", ".proofOfStake"]],
- [".blockchain", [".mirror", ".mirrors"], ".dht"],
- [".signatures", ".cosigned", ".cosigning", ".undersigned", ".undersigning"],
-  ".reactions"
-]; // … immediately resolving data types listed ahead
+jsonion.stem.prototype.__relationType = {
+  dataNodeStem: {
+    __enumType: [__optional, __oneOf,
+      "TRANSLATION", "STEM", "MERGED", "ROOT", "MAIN", "MIRROR", "CAUSE", "EFFECT"
+  ] },
+  dataTreeNode: {
+    __enumType: [__optional, __oneOf,
+      "SYNONYM", "SYNSET", "HYPERNYM", "HYPONYM"
+  ] }
+}
 
-jsonion.stem.prototype.__embedKeys = [
-  "._{relation}",
- [".stems", ".stem"],
- [".augm", ".augmentations"],
- [".ext", ".extensions"],
- [[".actn", ".actions"], [".timestamps", ".t", ".tn"]]
- [".aggregations", [".stat", ".stats", ".statistic", ".statistics"]],
- [".tags", [".hashtags", ".\#"]]
-];
-
-jsonion.stem.prototype.__annotationKeys = [
-  ".annotations",
- [".ref", ".refs", ".references"],
- [".includes", ".included", ".includesData"], 
-  ".contains"
-];
-
-jsonion.stem.prototype.__subsetKeys = [
- [".captions", ".views", ".partials", ".partialViews"],
- [".rootData", ".rootDataNodes"],
- [".rel", ".related", ".relatedData", ".relatedDataNodes"]
-];
-
+jsonion.stem.__pointersMapTpl = { // purpose
+  actions: [
+    ".actn", ".actions"
+  ],
+  timestamps: [
+    "#/actions", [".time-stamp-s", ".t", ".tn"]
+  ],
+  relations: [
+    "{related}",
+    ".link-s",
+   [".tag-s", ".hashtag-s", .#"]
+  ],
+  src: [
+    "{sourceParams}", "{sourceServiceParams}",
+    ".mirror-s",
+   {
+    ".blockchain": [ 
+      ".{chain}*", [[".tx*", ".txId"]],
+      ".blockchain*", ".chain*",
+      "*Host", "*Service", "*Type", "*Name", "*Addr-ess",  "*URL/i" ]
+   },
+   [".dht", ".distributedHashTable"]
+  ],
+  augmentation: [
+    ".augm-ent-ation-s", ".ext-ension-s"
+  ],
+ "validate-validation": [
+   [
+    ".signatures", ".cosigned", ".cosigning", ".undersigned", ".undersigning"
+   ],
+   [".proofOf", ".proofOfWork", ".proofOfStake"],
+    ".reactions"
+  ],
+  stats: [
+    ".stat-s", ".statistic-s", ".statistics", ".aggregate-s", ".aggregation-s" 
+  ],
+  chksum: [
+    ".cksum", ".chksum", ".checksum-s", ".digest", ".hash-es", ".hashchain", ".merkle", ".merkleTree"
+  ],
+  subset: {
+    ref: [
+     [".ref-s", ".references"],
+      ".contains", ".annotations",includes",  ".included", ".includesData"
+    ],
+    view: [
+      ".captions", ".views", ".partials", ".partialViews", ".rootData", ".rootDataNodes", ".rel", ".related", ".relatedData", ".relatedDataNodes"
+    ]
+  }
+};
+ 
 
 jsonion.stem.prototype.__schema = () => {
 
-  var { mapActions, mapObjects, head, main, foot } = schemaMixin,
+  var { mapActions, mapObjects, head, main, foot } = schemaMixin
+  
+/*
 
-  sourceServiceParams = this.arguments[0],
-  embedKeys = (this.arguments[1])
-             ? this.arguments[1] : null;
+  var {
+    sourceServiceParams: ...
+    embedKeys: embed, subsetKeys: subset,
+  } = this.arguments[0]
+  
+*/
 
   return (
  {
